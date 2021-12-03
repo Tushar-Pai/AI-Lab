@@ -1,115 +1,94 @@
-from copy import deepcopy
-from queue import PriorityQueue
+def print_b(src):
+    state = src.copy()
+    state[state.index(-1)] = ' '
+    print(
+        f"""
+{state[0]} {state[1]} {state[2]}
+{state[3]} {state[4]} {state[5]}
+{state[6]} {state[7]} {state[8]}
+        """
+    )
 
-def check(state, target):
-    for i in range(3):
-        for j in range(3):
-            if state[i][j] != target[i][j]:
-                return False
-    return True
 
-def get_loc(state, tile):
-    for i in range(0, 3):
-        for j in range(0, 3):
-            if(state[i][j]==tile):
-                return (i, j)
-
-def getHeuristic(state, target):
-    result=0
-    for i in range(0, 3):
-        for j in range(0,3):
-            if(state[i][j]!='-1'):
-                target_loc = get_loc(target, state[i][j])
-                result += abs(i-target_loc[0])+abs(j-target_loc[1])
-    return result
-
-def getIndex(state):
-    for i in range(3):
-        for j in range(3):
-            if state[i][j] == '-1':
-                return [i, j]
-    return -1
-
-def display(state):
-    for i in state:
-        for j in i:
-            print(j, end = " ")
-        print()
-
-def a_star(state, target):
+def h(state, target):
     count = 0
-    queue = PriorityQueue()
-    queue.put((getHeuristic(state, target), [state, 0]))
-    print("Current State")
-    display(state)
-    if check(state, target):
-        print("Solution found")
-        exit(0)
-
-    while queue.qsize() > 0:
-        state_aggregate = queue.get()[1]
-        level = state_aggregate[1]
-        state = state_aggregate[0]
-        index = getIndex(state)
-        if index == -1:
-            print("Error")
-            print(state)
-            exit(0)
-
-        if index[1]-1 >= 0:          # Left
-            state1 = deepcopy(state)
-            state1[index[0]][index[1]-1], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]][index[1]-1]
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                count += 1
-                queue.put((level+getHeuristic(state1, target)+1,[state1, level+1]))
-
-        if index[1]+1 < 3:          # Right
-            state1 = deepcopy(state)
-            state1[index[0]][index[1]+1], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]][index[1]+1]
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                count += 1
-                queue.put((level+getHeuristic(state1, target)+1,[state1, level+1]))
-
-        if index[0]-1 >= 0:         # Up
-            state1 = deepcopy(state)
-            state1[index[0]-1][index[1]], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]-1][index[1]]
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                count += 1
-                queue.put(((level+getHeuristic(state1, target)+1,[state1, level+1])))
+    i = 0
+    for j in state:
+        if state[i] != target[i]:
+            count = count+1
+    return count
 
 
-        if index[0]+1 < 3:         # Down
-            state1 = deepcopy(state)
-            state1[index[0]+1][index[1]], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]+1][index[1]]
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                count += 1
-                queue.put((level+getHeuristic(state1, target)+1,[state1, level+1]))
+def astar(state, target):  # Add inputs if more are required
+    states = [src]
+    g = 0
+    visited_states = []
+    while len(states):
+        print(f"Level: {g}")
+        moves = []
+        for state in states:
+            visited_states.append(state)
+            print_b(state)
+            if state == target:
+                print("Success")
+                return
+            moves += [move for move in possible_moves(
+                state, visited_states) if move not in moves]
+        costs = [g + h(move, target) for move in moves]
+        states = [moves[i]
+                  for i in range(len(moves)) if costs[i] == min(costs)]
+        g += 1
+    print("Fail")
 
 
-print("Enter the start state")
-state = [[i for i in input().split()] for j in range(3)]
+def possible_moves(state, visited_state):  # Add inputs if more are required
+    # Find index of empty spot and assign it to b
+    b = state.index(-1)
 
-print("Enter the target state")
-target = [[i for i in input().split()] for j in range(3)]
+    # 'd' for down, 'u' for up, 'r' for right, 'l' for left - directions array
+    d = []
 
-a_star(state, target)
+    # Add all possible direction into directions array - Hint using if statements
+    if b - 3 in range(9):
+        d.append('u')
+    if b not in [0, 3, 6]:
+        d.append('l')
+    if b not in [2, 5, 8]:
+        d.append('r')
+    if b + 3 in range(9):
+        d.append('d')
+
+    # If direction is possible then add state to move
+    pos_moves = []
+
+    # for all possible directions find the state if that move is played
+    # Jump to gen function to generate all possible moves in the given directions
+    for m in d:
+        pos_moves.append(gen(state, m, b))
+
+    # return all possible moves only if the move not in visited_states
+    return [move for move in pos_moves if move not in visited_state]
+
+
+def gen(state, m, b):
+    temp = state.copy()
+
+    # if move is to slide empty spot to the left and so on
+    if m == 'u':
+        temp[b - 3], temp[b] = temp[b], temp[b - 3]
+    if m == 'l':
+        temp[b - 1], temp[b] = temp[b], temp[b - 1]
+    if m == 'r':
+        temp[b + 1], temp[b] = temp[b], temp[b + 1]
+    if m == 'd':
+        temp[b + 3], temp[b] = temp[b], temp[b + 3]
+
+    # return new state with tested move to later check if "src == target"
+    return temp
+
+
+# Test 1
+src = [1, 2, 3, -1, 4, 5, 6, 7, 8]
+target = [1, 2, 3, 4, 5, -1, 6, 7, 8]
+
+astar(src, target)
