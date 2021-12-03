@@ -1,108 +1,91 @@
-from copy import deepcopy
+# Depth first search in search of target - Using Recursion
 
-count = 0
+def dfs(src, target, limit, visited_states):
+    # Base case if Target found
+    if src == target:
+        return True
 
-def check(state, target):
-    for i in range(len(state)):
-        for j in range(len(state)):
-            if state[i][j] != target[i][j]:
-                return False
-    return True
+    # Base case if limit exceeded
+    if (limit <= 0):
+        return False
 
-def getIndex(state):
-    for i in range(3):
-        for j in range(3):
-            if state[i][j] == '-1':
-                return [i, j]
+        # Add source to visited_states
+    visited_states.append(src)
+
+    # Find possible slides up, down, left right to current empty site
+    # Jump to possible_moves function
+    poss_moves = possible_moves(src, visited_states)
+
+    # For all possible moves gotten from the possible moves function
+    # Check if src equals to new targets
+    # Return True if target found in given depth limit
+    for move in poss_moves:
+        if dfs(move, target, limit - 1, visited_states):
+            return True
+    return False
+
+
+def possible_moves(state, visited_states):
+    # Find index of empty spot and assign it to b
+    b = state.index(-1)
+
+    # 'd' for down, 'u' for up, 'r' for right, 'l' for left - directions array
+    d = []
+
+    # Add all possible direction into directions array - Hint using if statements
+    if b - 3 in range(9):
+        d.append('u')
+    if b not in [0, 3, 6]:
+        d.append('l')
+    if b not in [2, 5, 8]:
+        d.append('r')
+    if b + 3 in range(9):
+        d.append('d')
+
+    # If direction is possible then add state to move
+    pos_moves = []
+
+    # for all possible directions find the state if that move is played
+    # Jump to gen function to generate all possible moves in the given directions
+    for m in d:
+        pos_moves.append(gen(state, m, b))
+
+    # return all possible moves only if the move not in visited_states
+    return [move for move in pos_moves if move not in visited_states]
+
+
+def gen(state, m, b):  # m(move) is direction to slide, b(blank) is index of empty spot
+    # create a copy of current state to test the move
+    temp = state.copy()
+
+    # if move is to slide empty spot to the left and so on
+    if m == 'u':
+        temp[b - 3], temp[b] = temp[b], temp[b - 3]
+    if m == 'l':
+        temp[b - 1], temp[b] = temp[b], temp[b - 1]
+    if m == 'r':
+        temp[b + 1], temp[b] = temp[b], temp[b + 1]
+    if m == 'd':
+        temp[b + 3], temp[b] = temp[b], temp[b + 3]
+
+    # return new state with tested move to later check if "src == target"
+    return temp
+
+
+def iddfs(src, target, depth):
+    visited_states = []
+    # Return Min depth at which the target was found
+    for i in range(1, depth + 1):
+        if dfs(src, target, i, visited_states):
+            return i
     return -1
 
-def display(state):
-    for i in state:
-        for j in i:
-            print(j, end = " ")
-        print()
 
-def ids(state, target, max_limit):
-    for limit in range(max_limit+1):
-        print(f"Level = {limit}")
-        dls(state, target, limit)
-    print("No solution found")
-
-def dls(state, target, limit):
-    global count
-    stack = [[state, limit]]
-    print("Current State")
-    display(state)
-    if check(state, target):
-        print("Solution found")
-        exit(0)
-
-    while len(stack) > 0:
-        x = stack.pop(-1)
-        state = x[0]
-        level = x[1]
-        index = getIndex(state)
-        if index == -1:
-            print("Error")
-            print(state)
-            exit(0)
-        if index[1]-1 >= 0:          # Left
-            state1 = deepcopy(state)
-            state1[index[0]][index[1]-1], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]][index[1]-1]
-            count += 1
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                if level > 1:
-                    stack.append([state1, level-1])
-
-        if index[1]+1 < 3:          # Right
-            state1 = deepcopy(state)
-            state1[index[0]][index[1]+1], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]][index[1]+1]
-            count += 1
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                if level > 1:
-                    stack.append([state1, level-1])
-
-        if index[0]-1 >= 0:         # Up
-            state1 = deepcopy(state)
-            state1[index[0]-1][index[1]], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]-1][index[1]]
-            count += 1
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                if level > 1:
-                    stack.append([state1, level-1])
-
-        if index[0]+1 < 3:         # Down
-            state1 = deepcopy(state)
-            state1[index[0]+1][index[1]], state1[index[0]][index[1]] = state1[index[0]][index[1]], state1[index[0]+1][index[1]]
-            count += 1
-            print("Current State")
-            display(state1)
-            if check(state1, target):
-                print(f"Solution found in {count} steps")
-                exit(0)
-            else:
-                if level > 1:
-                    stack.append([state1, level-1])
-
-print("Enter the start state")
-state = [[i for i in input().split()] for j in range(3)]
-
-print("Enter the target state")
-target = [[i for i in input().split()] for j in range(3)]
-
-max_limit = int(input("Enter the maximum limit: "))
-ids(state, target, max_limit)
+src = [1, 2, 3, -1, 4, 5, 6, 7, 8]
+target = [1, 2, 3, 4, 5, -1, 6, 7, 8]
+depth = 2
+val = iddfs(src, target, depth)
+if val != -1:
+    print("Depth found At : ", val)
+else:
+    print("Not Found By Depth", depth)

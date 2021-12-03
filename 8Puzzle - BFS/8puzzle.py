@@ -1,81 +1,88 @@
-from copy import deepcopy
-def check(state, target):
-    for i in range(3):
-        for j in range(3):
-            if state[i][j]!=target[i][j]:
-                return False
-    return True
-def getIndex(state):
-    for i in range(3):
-        for j in range(3):
-            if state[i][j]=='-1':
-                return (i, j)
-    return (-1, -1)
+def bfs(src, target):
+    queue = []
+    queue.append(src)
 
-def display(state):
-    print('-'*7)
-    print('|'+state[0][0]+'|'+state[0][1]+'|'+state[0][2]+'|')
-    print('-'*7)
-    print('|'+state[1][0]+'|'+state[1][1]+'|'+state[1][2]+'|')
-    print('-'*7)
-    print('|'+state[2][0]+'|'+state[2][1]+'|'+state[2][2]+'|')
-    print('-'*7)
-def bfs(state, target):
-    queue = [state]
-    while len(queue)>0:
-        current_state = queue.pop(0)
-        print('Current State')
-        display(current_state)
-        index = getIndex(current_state)
-        if check(current_state, target):
-            print("Solution found")
-            exit(0)
-        if index[0]==-1:
-            print("Error")
-            exit(-1)
-        if index[1]>0: #left
-            current_state_copy = deepcopy(current_state)
-            current_state_copy[index[0]][index[1]-1], current_state_copy[index[0]][index[1]] = current_state_copy[index[0]][index[1]-1], current_state_copy[index[0]][index[1]] 
-            if check(current_state_copy, target):
-                print("Solution")
-                display(current_state_copy)
-                print("Solution found")
-                exit(0)
-            else:
-                queue.append(current_state_copy)
-        if index[1]<2: #right
-            current_state_copy = deepcopy(current_state)
-            current_state_copy[index[0]][index[1]+1], current_state_copy[index[0]][index[1]] = current_state_copy[index[0]][index[1]+1], current_state_copy[index[0]][index[1]] 
-            if check(current_state_copy, target):
-                print("Solution")
-                display(current_state_copy)
-                print("Solution found")
-                exit(0)
-            else:
-                queue.append(current_state_copy)
-        if index[0]>0: #up
-            current_state_copy = deepcopy(current_state)
-            current_state_copy[index[0]][index[1]], current_state_copy[index[0]-1][index[1]] = current_state_copy[index[0]-1][index[1]], current_state_copy[index[0]][index[1]] 
-            if check(current_state_copy, target):
-                print("Solution")
-                display(current_state_copy)
-                print("Solution found")
-                exit(0)
-            else:
-                queue.append(current_state_copy)
+    vis = []
 
-        if index[0]<2: #down
-            current_state_copy = deepcopy(current_state)
-            current_state_copy[index[0]][index[1]], current_state_copy[index[0]+1][index[1]] = current_state_copy[index[0]+1][index[1]], current_state_copy[index[0]][index[1]] 
-            if check(current_state_copy, target):
-                print("Solution")
-                display(current_state_copy)
-                print("Solution found")
-                exit(0)
-            else:
-                queue.append(current_state_copy)
-print("Enter the start state;")
-state = [[i for i in input().split()] for j in range(3)]
-print("Enter target state;")
-target = [[i for i in input().split()] for j in range(3)]
-bfs(state, target)
+    while len(queue) > 0:
+        source = queue.pop(0)
+        vis.append(source)
+        print(source)
+
+        if source == target:
+            print("success")
+            return
+
+        poss_moves_to_do = []
+        poss_moves_to_do = possible_moves(source, vis)
+
+        for move in poss_moves_to_do:
+
+            if move not in vis and move not in queue:
+                queue.append(move)
+
+
+def possible_moves(state, visited_states):
+    # Find index of empty spot and assign it to b
+    b = state.index(-1)
+
+    # 'd' for down, 'u' for up, 'r' for right, 'l' for left - directions array
+    d = []
+    # Add all possible direction into directions array - Hint using if statements
+
+    if b not in [0, 1, 2]:
+        d.append('u')
+    if b not in [6, 7, 8]:
+        d.append('d')
+    if b not in [0, 3, 6]:
+        d.append('l')
+    if b not in [2, 5, 8]:
+        d.append('r')
+
+    # If direction is possible then add state to move
+    pos_moves_it_can = []
+
+    # for all possible directions find the state if that move is played
+    # Jump to gen function to generate all possible moves in the given directions
+
+    for i in d:
+        pos_moves_it_can.append(gen(state, i, b))
+
+    return [move_it_can for move_it_can in pos_moves_it_can if move_it_can not in visited_states]
+
+
+# Generate move for given direction
+def gen(state, m, b):
+    temp = state.copy()
+
+    # if move is to slide empty spot to the left and so on
+
+    if m == 'd':
+        temp[b + 3], temp[b] = temp[b], temp[b + 3]
+
+    if m == 'u':
+        temp[b - 3], temp[b] = temp[b], temp[b - 3]
+
+    if m == 'l':
+        temp[b - 1], temp[b] = temp[b], temp[b - 1]
+
+    if m == 'r':
+        temp[b + 1], temp[b] = temp[b], temp[b + 1]
+
+    # return new state with tested move to later check if "src == target"
+    return temp
+
+
+# Test 1
+src = [1, 2, 3, -1, 4, 5, 6, 7, 8]
+target = [1, 2, 3, 4, 5, -1, 6, 7, 8]
+
+bfs(src, target)
+
+# # Test 2
+# src = [1,2,3,-1,4,5,6,7,8]
+# target=[1,2,3,6,4,5,-1,7,8]
+#
+#
+#
+# bfs(src, target)
